@@ -344,6 +344,6 @@ int *Grafo::caminhoDet()
   TSP(caminho, visitados, pesoFinal);
 
   cout << "Peso final: " << *pesoFinal << endl;
-  pesoUltimoCaminho = *pesoFinal;
+  pesoUltimoCaminho = *pesoFinal; // seg fault pq?
   return caminho;
 }
