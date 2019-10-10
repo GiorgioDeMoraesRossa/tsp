@@ -1,9 +1,12 @@
 
 #include "Grafo.h"
+#define MAX 99999
 
 Grafo::Grafo(int V)
 {
   this->V = V;
+  // caminho = (int *)malloc(sizeof(int) * (this->V + 1));
+  caminho = new int[V + 1];
   pesoUltimoCaminho = 0;
 }
 
@@ -12,17 +15,24 @@ Grafo::Grafo()
   this->V = 0;
   pesoUltimoCaminho = 0;
 }
+
+Grafo::~Grafo()
+{
+  delete[] caminho;
+}
+
 // função que adiciona uma aresta
 void Grafo::adicionarAresta(int v1, int v2, int x1, int y1, int x2, int y2)
 {
   Aresta aresta(v1, v2, x1, y1, x2, y2);
-  //aresta.print();
   arestas.push_back(aresta);
 }
-
-int Grafo::qntdArestas()
+//função que adiciona uma aresta porém recebe os vértices já prontos (e printa quais fez)
+void Grafo::adicionarAresta(Vertice v1, Vertice v2)
 {
-  return arestas.size();
+  Aresta aresta(v1, v2);
+  //  aresta.print();
+  arestas.push_back(aresta);
 }
 
 int Grafo::obterV()
@@ -30,11 +40,14 @@ int Grafo::obterV()
   return V;
 }
 
-float Grafo::obterUltimoPeso()
+double Grafo::obterUltimoPeso()
 {
   return pesoUltimoCaminho;
 }
-
+int *Grafo::obterCaminho()
+{
+  return caminho;
+}
 // função que busca o subconjunto de um elemento "i"
 int Grafo::buscar(int subset[], int i)
 {
@@ -51,7 +64,7 @@ void Grafo::unir(int subset[], int v1, int v2)
   subset[v1_set] = v2_set;
 }
 
-/// função que roda o algoritmo de Kruskal
+// função que utiliza o algoritmo de Kruskal e transforma o grafo em uma árvore mínima
 void Grafo::kruskal()
 {
   vector<Aresta> arvore;
@@ -63,24 +76,22 @@ void Grafo::kruskal()
   // aloca memória para criar "V" subconjuntos
   int *subset = new int[V];
 
-  // inicializa todos os subconjuntos como conjuntos de um único elemento
+  // inicializa todos os subconjuntos como conjuntos de um único elemento -1
   memset(subset, -1, sizeof(int) * V);
 
   for (int i = 0; i < size_arestas; i++)
   {
     int v1 = buscar(subset, arestas[i].obterVertice1());
     int v2 = buscar(subset, arestas[i].obterVertice2());
-    cout << "v1: " << v1 << " v2: " << v2 << endl;
     if (v1 != v2)
     {
       // se forem diferentes é porque NÃO forma ciclo, insere no vetor
-      cout << "inseriu"
-           << " v1: " << v1 << " v2: " << v2 << endl;
       arvore.push_back(arestas[i]);
       unir(subset, v1, v2); // faz a união
     }
   }
-
+  // Salva a arvore nas arestas do grafo
+  arestas = arvore;
   int size_arvore = arvore.size();
 
   // mostra as arestas selecionadas com seus respectivos pesos
@@ -90,76 +101,112 @@ void Grafo::kruskal()
     char v2 = 'A' + arvore[i].obterVertice2();
     cout << "(" << v1 << ", " << v2 << ") = " << arvore[i].obterPeso() << endl;
   }
-  V = size_arvore;
-  arestas = arvore;
-
-  for (int i = 0; i < size_arvore; i++)
-  {
-
-    cout << "(" << arestas[i].obterVertice1() << ", " << arestas[i].obterVertice2() << ") = " << arestas[i].obterPeso() << endl;
-  }
 
   return;
 }
-
-int Grafo::passo(int i, int *caminho, int nAresta, vector<Aresta> arestas2, float *custo)
+// função recursiva utilizada para andar pela árvore
+void Grafo::passo(int *i, int *caminho, int nVertice, bool *visitados, double *custo)
 {
-  if (i > V)
+
+  visitados[nVertice] = true;
+  caminho[(*i)] = nVertice;
+  *i = *i + 1;
+
+  //procura o próximo vértice para visitar
+  for (int j = 0; j < arestas.size(); j++)
+  //passa por todas as arestas procurando arestas que passem pelo vértice atual(nVertice)
   {
-    cout << "ja? i: " << i << "v: " << V << endl;
-    return i;
-  }
-
-  // cout << "vertice: " << vertice << " i: " << i << endl;
-  caminho[i] = nAresta;
-  i++;
-  cout << " caminho: " << caminho[i - 1] << " NARESTA: " << nAresta << endl;
-
-  for (int j = 0; j < arestas2.size(); j++)
-  {
-    cout << "j: " << j << " vertice: " << nAresta << " v1: " << arestas2[j].obterVertice1() << " v2: " << arestas2[j].obterVertice2() << endl;
-
-    if (nAresta == arestas2[j].obterVertice1())
+    if (nVertice == arestas[j].obterVertice1())
     {
-      cout << "entrei" << endl;
-      if (arestas2[arestas2[j].obterVertice2()].obterPeso() != -1)
+      if (!visitados[arestas[j].obterVertice2()])
+      // verifica se o outro lado ja foi visitado, se não, visita
       {
-        cout << "if 1 do loop: " << i << endl;
-        *custo = *custo + arestas2[arestas2[j].obterVertice2()].obterPeso();
-        arestas2[arestas2[j].obterVertice2()].setPeso(-1);
-        i = this->passo(i, caminho, arestas2[j].obterVertice2(), arestas2, custo);
+        int auxVertice = arestas[j].obterVertice2();
+        *custo = *custo + arestas[j].obterPeso();
+        cout << "i: " << *i << " auxvertice: " << auxVertice << " visitado? : " << visitados[auxVertice] << endl;
+
+        passo(i, caminho, auxVertice, visitados, custo);
       }
     }
-    if (nAresta == arestas2[j].obterVertice2())
+    if (nVertice == arestas[j].obterVertice2()) // mesma coisa do if acima, porém para o outro "lado" da aresta
     {
-      if (arestas2[arestas2[j].obterVertice1()].obterPeso() != -1)
+      if (!visitados[arestas[j].obterVertice1()])
       {
-        cout << "if 2 do loop: " << i << endl;
-        *custo += arestas2[arestas2[j].obterVertice1()].obterPeso();
-        arestas2[arestas2[j].obterVertice1()].setPeso(-1);
-        cout << "i: " << i << " arestas2[j].v1: " << arestas2[j].obterVertice1() << endl;
-        i = this->passo(i, caminho, arestas2[j].obterVertice1(), arestas2, custo);
+        int auxVertice = arestas[j].obterVertice1();
+        *custo = *custo + arestas[j].obterPeso();
+        cout << "i: " << *i << " auxvertice: " << auxVertice << " visitado? : " << visitados[auxVertice] << endl;
+        passo(i, caminho, auxVertice, visitados, custo);
       }
     }
   }
-
-  return i;
+  // se chegou no ultimo nível ele não chama o passo pois o vetor de visitados esta todo True
+  if (*i == V)
+  {
+    //seta o final do caminho para ser o início
+    caminho[*i] = 0;
+    int j, k;
+    for (j = 0; j < arestas.size(); j++)
+    //passa por todas as arestas procurando o ultimo vértice
+    {
+      if (nVertice == arestas[j].obterVertice1() || nVertice == arestas[j].obterVertice2())
+        break;
+    }
+    for (k = 0; k < arestas.size(); k++)
+    //passa por todas as arestas procurando o vértice 0
+    {
+      if (0 == arestas[k].obterVertice1() || 0 == arestas[k].obterVertice2())
+        break;
+    }
+    Vertice v1, v2;
+    //pegando o vértice 0
+    if (arestas[k].obterVertice1() == 0)
+    {
+      v1 = arestas[k].obterPVertice1();
+    }
+    else
+    {
+      v1 = arestas[k].obterPVertice2();
+    }
+    //pegando o outro vértice(origem)
+    if (arestas[j].obterVertice1() == 0)
+    {
+      v2 = arestas[j].obterPVertice1();
+    }
+    else
+    {
+      v2 = arestas[j].obterPVertice2();
+    }
+    //calculando o custo da volta
+    *custo += sqrt(((pow((v2.getX() - v1.getX()), 2)) + (pow((v2.getY() - v1.getY()), 2))));
+  }
+  return;
 }
 
+//caminha pelo arvore (utilizar após o método kruskal) em pré ordem e retorna o caminho feito
 int *Grafo::caminhoPreOrdem()
 {
-  int result, *caminho = (int *)malloc(sizeof(int) * V + 1);
-  vector<Aresta> arestas2;
-  arestas2 = arestas;
-  arestas2[0].setPeso(-1);
-  float *custo = (float *)malloc(sizeof(float));
-  result = passo(0, caminho, 0, arestas2, custo);
-  cout << "custo: " << *custo << endl;
+  int *caminho = (int *)malloc(sizeof(int) * V + 1);
+  int *i = (int *)malloc(sizeof(int));
+  bool *visitados = (bool *)malloc(sizeof(bool) * V);
+  double *custo = (double *)malloc(sizeof(double));
+  *custo = 0;
+  caminho[0] = 0;
+  i[0] = 0;
+  visitados[0] = true;
+  //caminha pela árvore em pré ordem
+
+  passo(i, caminho, 0, visitados, custo);
+  //int i, int *caminho, int nVertice, bool *visitados, double *custo)
+
+  //salva o custo do caminho no objeto Grafo
+
   pesoUltimoCaminho = *custo;
-  caminho[V + 1] = 0;
+  free(i);
+  free(visitados);
+  free(custo);
   return caminho;
 }
-
+// Copia o segundo vetor de inteiros para o primeiro, e bota ao final do segundo vetor o vértice inicial
 void Grafo::copyToFinal(int *caminhoAtual, int *caminhoFinal)
 {
   for (int i = 0; i < V; i++)
@@ -170,7 +217,8 @@ void Grafo::copyToFinal(int *caminhoAtual, int *caminhoFinal)
 // função que encontra o valor minimo de uma aresta chegando em i
 int Grafo::firstMin(int i)
 {
-  int min = 999999999;
+  int min = MAX;
+  //passa por todas as arestas procurando por arestas que passem em i, e verifica o menor custo dentre elas
   for (int j = 0; j < arestas.size(); j++)
   {
     if (arestas[j].obterVertice1() == i || arestas[j].obterVertice2() == i)
@@ -185,13 +233,14 @@ int Grafo::firstMin(int i)
 // função que encontra o segundo menor valor de uma aresta chegando em i
 int Grafo::secondMin(int i)
 {
-  int first = 999999999, second = 999999999;
+  double first = MAX, second = MAX;
 
   for (int j = 0; j < arestas.size(); j++)
   {
     if (i == j)
       continue;
 
+    // procura arestas que passem por i, e testa seu peso
     if (arestas[j].obterVertice1() == i || arestas[j].obterVertice2() == i)
     {
       if (arestas[j].obterPeso() < first)
@@ -205,17 +254,17 @@ int Grafo::secondMin(int i)
   }
   return second;
 }
-
-void Grafo::TSPRec(int limiteAtual, int pesoAtual, int level, int *caminhoAtual, float *pesoFinal, bool visitados[], int *caminhoFinal)
+// Recursão para percorrer o grafo procurando a melhor solução
+void Grafo::TSPRec(double limiteAtual, double pesoAtual, int nivel, int *caminhoAtual, double *custoFinal, bool *visitados, int *caminhoFinal)
 {
-  // level == V significa que passou por todos os vertices alguma vez
-  if (level == V)
-  {
 
+  // nivel == V significa que passou por todos os vertices alguma vez
+  if (nivel == V)
+  {
     // acha onde que a aresta atual liga com o primeiro vértice
     for (int i = 0; i < arestas.size(); i++)
     {
-      if (caminhoAtual[level - 1] == arestas[i].obterVertice1())
+      if (caminhoAtual[nivel - 1] == arestas[i].obterVertice1())
       {
         if (arestas[i].obterVertice2() == 0)
         {
@@ -226,24 +275,25 @@ void Grafo::TSPRec(int limiteAtual, int pesoAtual, int level, int *caminhoAtual,
 
           // Atualiza o caminho e resultado final se o resultado atual é melhor
 
-          if (respostaAtual < *pesoFinal)
+          if (respostaAtual < *custoFinal)
           {
             copyToFinal(caminhoAtual, caminhoFinal);
-            *pesoFinal = respostaAtual;
+            pesoUltimoCaminho = respostaAtual; //salva no objeto o custo
+            *custoFinal = respostaAtual;
           }
         }
       }
-      if (caminhoAtual[level - 1] == arestas[i].obterVertice2()) //checa o caso da aresta estar invertida
+      if (caminhoAtual[nivel - 1] == arestas[i].obterVertice2()) //checa o caso da aresta estar invertida
       {
         if (arestas[i].obterVertice1() == 0)
         {
 
           float respostaAtual = pesoAtual + arestas[i].obterPeso();
-
-          if (respostaAtual < *pesoFinal)
+          if (respostaAtual < *custoFinal)
           {
             copyToFinal(caminhoAtual, caminhoFinal);
-            *pesoFinal = respostaAtual;
+            pesoUltimoCaminho = respostaAtual; //salva no objeto o custo
+            *custoFinal = respostaAtual;
           }
         }
       }
@@ -251,52 +301,55 @@ void Grafo::TSPRec(int limiteAtual, int pesoAtual, int level, int *caminhoAtual,
     return;
   }
 
-  // para outros levels itera em todos os vértices procurando recursivamente por caminhos
+  // para outros nivels itera em todos os vértices procurando recursivamente por caminhos
   for (int i = 0; i < V; i++)
   {
     if (visitados[i] == false)
     {
+      // salva o estado antes de procurar um outro caminho, para caso o caminho seja ruim ter como voltar
       float tempPeso;
       int temp = limiteAtual;
-      for (int k = 0; k < arestas.size(); k++)
+
+      for (int k = 0; k < arestas.size(); k++) // procura em todas as arestas as que passam pelo vértice i
       {
         if (i == arestas[k].obterVertice1())
         {
-
-          if (caminhoAtual[level - 1] == arestas[k].obterVertice2())
+          // ao achar uma aresta soma o peso e para de procurar
+          if (caminhoAtual[nivel - 1] == arestas[k].obterVertice2())
           {
-
             tempPeso = arestas[k].obterPeso();
             pesoAtual += tempPeso;
+            break;
           }
         }
         if (i == arestas[k].obterVertice2()) //testa se tiver invertido
         {
 
-          if (caminhoAtual[level - 1] == arestas[k].obterVertice1())
+          if (caminhoAtual[nivel - 1] == arestas[k].obterVertice1())
           {
 
             tempPeso = arestas[k].obterPeso();
             pesoAtual += tempPeso;
+            break;
           }
         }
       }
 
       // o limite atual é contado de forma diferente no segundo nível pois ainda não tem 2 valores
-      if (level == 1)
-        limiteAtual -= ((firstMin(caminhoAtual[level - 1]) + firstMin(i)) / 2);
+      if (nivel == 1)
+        limiteAtual -= ((firstMin(caminhoAtual[nivel - 1]) + firstMin(i)) / 2);
 
       else
-        limiteAtual -= ((secondMin(caminhoAtual[level - 1]) + firstMin(i)) / 2);
+        limiteAtual -= ((secondMin(caminhoAtual[nivel - 1]) + firstMin(i)) / 2);
 
       // se a resposta atual é menor que o peso final ainda, precisamos explorar mais
-      if (limiteAtual + pesoAtual < *pesoFinal)
+      if (limiteAtual + pesoAtual < *custoFinal)
       {
-        caminhoAtual[level] = i;
+        caminhoAtual[nivel] = i;
         visitados[i] = true;
 
-        // chama recursão do proximo level
-        TSPRec(limiteAtual, pesoAtual, level + 1, caminhoAtual, pesoFinal, visitados, caminhoFinal);
+        // chama recursão do proximo nivel
+        TSPRec(limiteAtual, pesoAtual, nivel + 1, caminhoAtual, custoFinal, visitados, caminhoFinal);
       }
 
       // se não é menor então descarta as mudanças e da reset nas variáveis para tentar outro caminho
@@ -304,22 +357,22 @@ void Grafo::TSPRec(int limiteAtual, int pesoAtual, int level, int *caminhoAtual,
       limiteAtual = temp;
 
       memset(visitados, false, sizeof(bool) * V);
-      for (int j = 0; j <= level - 1; j++)
+      for (int j = 0; j <= nivel - 1; j++)
         visitados[caminhoAtual[j]] = true;
     }
   }
 }
-
-void Grafo::TSP(int *caminho, bool visitados[], float *pesoFinal)
+// primeira etapa do branch and bound, basicamente seta as variáveis e o início do caminho
+void Grafo::TSP(bool *visitados, double *custoFinal)
 {
   int caminhoAtual[V + 1];
 
   // calculo inicial do peso para o primeiro vertice
   // formula: 1/2*(menor + segundo menor) para todos os vertices
 
-  float limiteAtual = 0;
+  double limiteAtual = 0;
   memset(caminhoAtual, -1, sizeof(caminhoAtual));
-  memset(visitados, 0, sizeof(caminhoAtual));
+  memset(visitados, 0, sizeof(caminhoAtual) - 1);
 
   // calcula o peso inicial
   for (int i = 0; i < V; i++)
@@ -328,22 +381,16 @@ void Grafo::TSP(int *caminho, bool visitados[], float *pesoFinal)
   visitados[0] = true;
   caminhoAtual[0] = 0;
 
-  // chamando a recursão com peso 0 e level 1
-  TSPRec(limiteAtual, 0, 1, caminhoAtual, pesoFinal, visitados, caminho);
+  // chamando a recursão com peso 0 e nivel 1
+  TSPRec(limiteAtual, 0, 1, caminhoAtual, custoFinal, visitados, caminho);
 }
-
-int *Grafo::caminhoDet()
+// retorna o caminho que seria solução ótima para o TSP, utiliza o algoritmo "branch and bound"
+void Grafo::caminhoDet()
 {
 
-  int *caminho = (int *)malloc(sizeof(int) * (V + 2));
-
   bool visitados[V];
+  double custoFinal = MAX;
 
-  float *pesoFinal = (float *)malloc(sizeof(int));
-  *pesoFinal = 99999;
-  TSP(caminho, visitados, pesoFinal);
-
-  cout << "Peso final: " << *pesoFinal << endl;
-  pesoUltimoCaminho = *pesoFinal; // seg fault pq?
-  return caminho;
+  //chama a primeira etapa do algoritmo
+  TSP(visitados, &custoFinal);
 }

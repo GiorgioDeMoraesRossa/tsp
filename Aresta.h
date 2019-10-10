@@ -6,14 +6,17 @@ using namespace std;
 class Aresta
 {
   Vertice vertice1, vertice2;
-  float peso;
+  double peso;
 
 public:
   Aresta(int v1, int v2, int x1, int y1, int x2, int y2);
+  Aresta(Vertice v1, Vertice v2);
   void print();
   int obterVertice1();
   int obterVertice2();
-  float obterPeso();
-  void setPeso(float novoPeso);
+  Vertice obterPVertice1();
+  Vertice obterPVertice2();
+  double obterPeso();
+  void setPeso(double novoPeso);
   bool operator<(const Aresta &aresta2) const;
 };

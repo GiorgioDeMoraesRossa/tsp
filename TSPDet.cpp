@@ -1,45 +1,27 @@
 
-#include "Grafo.h"
-
+#include "GeradorGrafo.h"
+#define V 16 //número de vértices
 int main()
 {
+  // cria um gerador(passando o tamanho do plano cartesiano) e gera as arestas
+  GeradorGrafo gerador((V + (V * 1 / 3 + 1))); //plano 21x21 quando V(número de vértices) é 15
 
-  Grafo g(7); // grafo
-  // adiciona as arestas
+  Grafo g = gerador.GerarArestas(V); // o gerador de arestas retorna o Grafo gerado
 
-  g.adicionarAresta(0, 1, -3, 2, -3, 1);
-  g.adicionarAresta(0, 2, -3, 2, 4, 0);
-  g.adicionarAresta(0, 3, -3, 2, 2, -2);
-  g.adicionarAresta(0, 4, -3, 2, -2, -2);
-  g.adicionarAresta(0, 5, -3, 2, 3, 2);
-  g.adicionarAresta(0, 6, -3, 2, -3, -1);
+  //chama a funçao que retorna o caminho
 
-  g.adicionarAresta(1, 2, -3, 1, 4, 0);
-  g.adicionarAresta(1, 3, -3, 1, 2, -2);
-  g.adicionarAresta(1, 4, -3, 1, -2, -2);
-  g.adicionarAresta(1, 5, -3, 1, 3, 2);
-  g.adicionarAresta(1, 6, -3, 1, -3, -1);
+  g.caminhoDet();
 
-  g.adicionarAresta(2, 3, 4, 0, 2, -2);
-  g.adicionarAresta(2, 4, 4, 0, -2, -2);
-  g.adicionarAresta(2, 5, 4, 0, 3, 2);
-  g.adicionarAresta(2, 6, 4, 0, -3, -1);
-
-  g.adicionarAresta(3, 4, 2, -2, -2, -2);
-  g.adicionarAresta(3, 5, 2, -2, 3, 2);
-  g.adicionarAresta(3, 6, 2, -2, -3, -1);
-
-  g.adicionarAresta(4, 5, -2, -2, 3, 2);
-  g.adicionarAresta(4, 6, -2, -2, -3, -1);
-
-  g.adicionarAresta(5, 6, 3, 2, -3, -1);
-
-  int *result = g.caminhoDet();
-  for (int i = 0; i < 8; i++)
+  cout << "Percorrendo grafo..." << endl;
+  int *result = g.obterCaminho();
+  //imprime
+  cout << "Caminho ótimo: " << endl;
+  for (int i = 0; i <= V; i++)
   {
     char v1 = 'A' + result[i];
-    cout << "iterador: " << i << " vertice: " << v1 << endl;
+    cout << "Passo: " << i + 1 << " vertice: " << v1 << endl;
   }
-  // cout << "custo final: " << result[9] << endl;
+
+  cout << "custo final: " << g.obterUltimoPeso() << endl;
   return 0;
 }
