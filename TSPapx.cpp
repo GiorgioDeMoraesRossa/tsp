@@ -1,6 +1,6 @@
 
 #include "GeradorGrafo.h"
-#define V 20 //número de vértices
+#define V 200 //número de vértices
 int main()
 {
 
@@ -21,6 +21,6 @@ int main()
     cout << "Passo: " << i + 1 << " vertice: " << v1 << endl;
   }
   cout << "custo final: " << g.obterUltimoPeso() << endl;
-  free(result);
+
   return 0;
 }

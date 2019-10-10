@@ -1,6 +1,6 @@
 
 #include "GeradorGrafo.h"
-#define V 16 //número de vértices
+#define V 20 //número de vértices
 int main()
 {
   // cria um gerador(passando o tamanho do plano cartesiano) e gera as arestas
@@ -10,9 +10,9 @@ int main()
 
   //chama a funçao que retorna o caminho
 
+  cout << "Percorrendo grafo..." << endl;
   g.caminhoDet();
 
-  cout << "Percorrendo grafo..." << endl;
   int *result = g.obterCaminho();
   //imprime
   cout << "Caminho ótimo: " << endl;

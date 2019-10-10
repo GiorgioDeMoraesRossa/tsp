@@ -5,7 +5,6 @@
 Grafo::Grafo(int V)
 {
   this->V = V;
-  // caminho = (int *)malloc(sizeof(int) * (this->V + 1));
   caminho = new int[V + 1];
   pesoUltimoCaminho = 0;
 }
@@ -92,7 +91,7 @@ void Grafo::kruskal()
   }
   // Salva a arvore nas arestas do grafo
   arestas = arvore;
-  int size_arvore = arvore.size();
+  /*int size_arvore = arvore.size();
 
   // mostra as arestas selecionadas com seus respectivos pesos
   for (int i = 0; i < size_arvore; i++)
@@ -100,7 +99,7 @@ void Grafo::kruskal()
     char v1 = 'A' + arvore[i].obterVertice1();
     char v2 = 'A' + arvore[i].obterVertice2();
     cout << "(" << v1 << ", " << v2 << ") = " << arvore[i].obterPeso() << endl;
-  }
+  }*/
 
   return;
 }
@@ -123,8 +122,6 @@ void Grafo::passo(int *i, int *caminho, int nVertice, bool *visitados, double *c
       {
         int auxVertice = arestas[j].obterVertice2();
         *custo = *custo + arestas[j].obterPeso();
-        cout << "i: " << *i << " auxvertice: " << auxVertice << " visitado? : " << visitados[auxVertice] << endl;
-
         passo(i, caminho, auxVertice, visitados, custo);
       }
     }
@@ -134,7 +131,6 @@ void Grafo::passo(int *i, int *caminho, int nVertice, bool *visitados, double *c
       {
         int auxVertice = arestas[j].obterVertice1();
         *custo = *custo + arestas[j].obterPeso();
-        cout << "i: " << *i << " auxvertice: " << auxVertice << " visitado? : " << visitados[auxVertice] << endl;
         passo(i, caminho, auxVertice, visitados, custo);
       }
     }
